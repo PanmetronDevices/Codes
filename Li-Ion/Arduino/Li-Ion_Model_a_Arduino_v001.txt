@@ -1,0 +1,50 @@
+//Li-Ion model A no Vcc
+
+#include <TimerOne.h>
+
+const int refVpin = 9;
+const int refCpin = 10;
+const int edpin = 8;
+
+int RefcPWM(float current_mA){
+float refCvolt= current_mA/ 1000.0;
+if(refCvolt>1.5){  
+  digitalWrite(edpin, LOW);
+}
+return (refCvolt*1023.0)/5;
+}
+
+int RefvPWM(float voltage){
+    return (voltage*1023.00)/5.00; 
+}
+
+int i = 1;
+const int resolution = 15000;
+
+void setup() {
+  pinMode(refVpin, OUTPUT);
+  pinMode(refCpin, OUTPUT);
+  pinMode(edpin, OUTPUT);
+
+  digitalWrite(edpin, HIGH);
+  Timer1.initialize(1000);
+  
+  Timer1.pwm(refVpin, RefvPWM(2500.0 * pow(i, 0.0541) / 1000.0/6.0);
+  Timer1.pwm(refCpin, RefcPWM(200));
+
+
+}
+
+
+void loop() {
+  
+  float vbat = 2500.0 * pow(i, 0.0541) / 1000.0;  
+  float refv= vbat/6;
+  Timer1.setPwmDuty(refVpin, RefvPWM(refv));
+  
+
+  i++;
+  if (i >= resolution) i = resolution;
+
+  delay(100);
+}
