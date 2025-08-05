@@ -1,0 +1,64 @@
+//NiMh Model 
+#include <TimerOne.h>
+
+const int refVpin = 9;		// PWM output for RefV
+const int refCpin = 10;		// PWM output for RefC
+const int edpin = 8;			// E/D (enable/disable) pin for battery simulation
+
+// Function to calculate PWM value for RefC
+int RefcPWM(float current_mA){
+
+	float refCvolt= current_mA/ 1000.0;
+
+if(refCvolt>1.5){  
+
+  digitalWrite(edpin, LOW);
+}
+
+return (refCvolt*1023.0)/5;		//Convert RefC voltage to 1kHZ PWM value
+}
+
+// Function to calculate PWM value for RefV
+int RefvPWM(float voltage){
+
+    return (voltage*1023.00)/5.00; 		//Convert RefV voltage to 1kHz PWM value
+}
+
+
+int i = 1;		// Time index to update RefV
+
+const int resolution = 15000;		// MAX step number for simulation to reach equilibrium meaning "Charging Completed"
+
+void setup() {
+  pinMode(refVpin, OUTPUT);
+  pinMode(refCpin, OUTPUT);
+  pinMode(edpin, OUTPUT);
+
+  digitalWrite(edpin, HIGH);
+
+  Timer1.initialize(1000);			//Set Timer1 for 1kHz PWM generation (T = 1000us, 1/T = 1kHz)
+  
+  Timer1.pwm(refVpin, RefvPWM( 1000.0 * pow(i,0.0350)/1000.0/6 ) );	//Set initial RefV value for i=1. Prevents current to lead voltage.
+
+  Timer1.pwm(refCpin, RefcPWM(200));		//Set constant RefC value for charging
+
+}
+
+
+void loop() {
+  
+  float vbat = 1000.0 * pow(i,0.0350)/1000.0;		//Simulate battery voltage as per the given model
+
+  float refv= vbat/6;			//Calculate RefV voltage by dividing  battery voltage to 6
+
+  Timer1.setPwmDuty(refVpin, RefvPWM(refv));			//Calculate RefV PWM value for new RefV voltage value
+  
+
+  i++;		//Increment simulation step
+  if (i >= resolution) i = resolution;			//Clamp simulation step to max resolution to avoid overflow
+
+  delay(10);
+}
+
+
+
